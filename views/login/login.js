@@ -87,7 +87,7 @@ class InputBox extends Component {
                     <Button
                         title="登录"
                         color="#1FC26D"
-                        onPress={() => this.props.navigation.navigate('Home')}
+                        onPress={() => this.props.navigation.navigate('Tab')}
                     />
                 </View>
             </View>
