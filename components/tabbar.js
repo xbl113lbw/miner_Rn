@@ -8,6 +8,7 @@ import Home from '../views/index/index';
 import Team from '../views/team/team';
 import TradeCenter from '../views/tradeCenter/tradeCenter';
 import C2c from '../views/c2c/c2c';
+import UserInfo from '../views/userInfo/userInfo';
 
 
 // 底部图片
@@ -56,6 +57,8 @@ export default class Tabbar extends Component {
                             iconName = focused ? trade_active : trade;
                         } else if (route.name === 'C2C交易') {
                             iconName = focused ? c2c_active : c2c;
+                        } else if (route.name === '个人') {
+                            iconName = focused ? user_active : user;
                         }
                         return <Icon name={iconName} size={size} color={color}/>;
                     },
@@ -68,6 +71,7 @@ export default class Tabbar extends Component {
                 <Tab.Screen name="团队" component={Team}/>
                 <Tab.Screen name="交易" component={TradeCenter}/>
                 <Tab.Screen name="C2C交易" component={C2c}/>
+                <Tab.Screen name="个人" component={UserInfo}/>
             </Tab.Navigator>
         );
     }

@@ -59,8 +59,7 @@ class Direct extends Component {
                                 </Text>
                             </View>
                         </View>
-                    </View>}
-                />
+                    </View>}/>
             </View>
         );
     }
@@ -124,8 +123,7 @@ class Indirect extends Component {
                                 </Text>
                             </View>
                         </View>
-                    </View>}
-                />
+                    </View>}/>
             </View>
         );
     }
@@ -193,8 +191,7 @@ class TeamCom extends Component {
                                 </Text>
                             </View>
                         </View>
-                    </View>}
-                />
+                    </View>}/>
             </View>
         );
     }

@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
-import {StyleSheet, View, Text, Image, FlatList, ScrollView} from 'react-native';
-import {Carousel, TabView} from 'teaset';
+import {StyleSheet, View, Text, Image, FlatList, ScrollView, TouchableOpacity} from 'react-native';
+import {Carousel} from 'teaset';
 
 /* 轮播组件 */
 class Swiper extends Component {
@@ -49,26 +49,30 @@ class Nav extends Component {
     render() {
         return (
             <View style={styles.navWrap}>
-                <View style={styles.navWrap_item}>
+                <TouchableOpacity style={styles.navWrap_item}
+                                  onPress={() => this.props.navigation.navigate('Recharge')}>
                     <Image style={{width: 54, height: 76}}
                            source={require('../../img/index/cb.png')}/>
                     <Text style={styles.navWrap_item_text}>充币</Text>
-                </View>
-                <View style={styles.navWrap_item}>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.navWrap_item}
+                                  onPress={() => this.props.navigation.navigate('Withdraw')}>
                     <Image style={{width: 54, height: 76}}
                            source={require('../../img/index/tb.png')}/>
                     <Text style={styles.navWrap_item_text}>提币</Text>
-                </View>
-                <View style={styles.navWrap_item}>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.navWrap_item}
+                                  onPress={() => this.props.navigation.navigate('InviteCode')}>
                     <Image style={{width: 54, height: 76}}
                            source={require('../../img/index/yq.png')}/>
                     <Text style={styles.navWrap_item_text}>邀请好友</Text>
-                </View>
-                <View style={styles.navWrap_item}>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.navWrap_item}
+                                  onPress={() => this.props.navigation.navigate('MyMiner')}>
                     <Image style={{width: 54, height: 76}}
                            source={require('../../img/index/kj.png')}/>
                     <Text style={styles.navWrap_item_text}>我的矿机</Text>
-                </View>
+                </TouchableOpacity>
             </View>
         );
     }
@@ -168,9 +172,10 @@ class Mill extends Component {
                                             <Image style={styles.list_right_title_bg}
                                                    source={require('../../img/index/text_line.png')}/>
                                         </View>
-                                        <View style={styles.pay_btn}>
+                                        <TouchableOpacity style={styles.pay_btn}
+                                                          onPress={() => this.props.navigation.navigate('Group', {id: item})}>
                                             <Text style={{color: '#fff'}}>租用</Text>
-                                        </View>
+                                        </TouchableOpacity>
                                     </View>
                                 </View>
                             </View>;
@@ -192,25 +197,30 @@ export default class Home extends Component {
                     {/*头部*/}
                     <View style={styles.headerBox}>
                         <Image style={{width: 90, height: 18}} source={require('../../img/index/logo.png')}/>
-                        <View style={styles.header_share}>
+                        <TouchableOpacity style={styles.header_share}
+                                          onPress={() => this.props.navigation.navigate('Share')}>
                             <Image style={{width: 14, height: 14, marginRight: 6}}
                                    source={require('../../img/index/shareIcon.png')}/>
                             <Text>分享</Text>
-                        </View>
+                        </TouchableOpacity>
                     </View>
                     {/*轮播*/}
                     <Swiper/>
                     {/*公告*/}
                     <Announcement/>
                     {/*首页导航*/}
-                    <Nav/>
+                    <Nav navigation={this.props.navigation}/>
                     {/*买币教程图片*/}
-                    <View style={{alignItems: 'center', marginBottom: 25, paddingLeft: 16, paddingRight: 16}}>
+                    <TouchableOpacity
+                        style={{alignItems: 'center', marginBottom: 25, paddingLeft: 16, paddingRight: 16}}
+                        onPress={() => {
+                            this.props.navigation.navigate('NoticeInfo', {id: 1});
+                        }}>
                         <Image style={{width: '100%', height: 69}}
                                source={require('../../img/index/jc_bg.png')}/>
-                    </View>
+                    </TouchableOpacity>
                     {/*矿机*/}
-                    <Mill/>
+                    <Mill navigation={this.props.navigation}/>
                 </ScrollView>
             </View>
         );

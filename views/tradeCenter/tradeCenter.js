@@ -29,6 +29,7 @@ class Buy extends Component {
     }
 }
 
+/*出售*/
 class Sell extends Component {
     constructor(props) {
         super(props);
@@ -56,6 +57,7 @@ class Sell extends Component {
     }
 }
 
+/*发布订单*/
 class Publish extends Component {
     constructor(props) {
         super(props);

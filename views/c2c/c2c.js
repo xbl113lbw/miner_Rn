@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {StyleSheet, View, Text, FlatList, TextInput, Button, Image} from 'react-native';
+import {StyleSheet, View, Text, FlatList, TextInput, Button, Image, ImageBackground, ScrollView} from 'react-native';
 
 import wx from '../../img/c2c/wx.png';
 import wx_active from '../../img/c2c/wx_active.png';
@@ -78,6 +78,98 @@ class Sell extends Component {
     }
 }
 
+class Publish extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            type: 0,
+            price: '',
+            num: '',
+            pwd: '',
+        };
+    }
+
+    render() {
+        return (
+            <ScrollView>
+                {/*绑定支付方式*/}
+                <ImageBackground source={require('../../img/c2c/pubBg.png')} style={styles.bindPayType}>
+                    <Text>发布前至少绑定一种支付方式<Text style={{color: '#32C3FF'}}>绑定支付方式</Text></Text>
+                </ImageBackground>
+                {/*表单区域*/}
+                <View style={styles.formWrap}>
+                    <View style={styles.formWrap_title}>
+                        <View style={{flex: 1}}>
+                            <Text style={styles.formWrap_title_text}>可用USDT：</Text>
+                            <Text style={styles.formWrap_title_num}>30000</Text>
+                        </View>
+                        <View style={{flex: 1}}>
+                            <Text style={styles.formWrap_title_text}>总价值：</Text>
+                            <Text style={styles.formWrap_title_num}>30000</Text>
+                        </View>
+                    </View>
+                    <View style={styles.formWrap_line}>
+                        <Text style={styles.formWrap_line_title}>类型：</Text>
+                        <View style={styles.formWrap_line_right}>
+                            <Text
+                                style={[styles.formWrap_line_btn, this.state.type === 0 ? styles.greenBtn : '']}
+                                onPress={() => this.setState({type: 0})}>购买</Text>
+                            <Text
+                                style={[styles.formWrap_line_btn, this.state.type === 1 ? styles.greenBtn : '']}
+                                onPress={() => this.setState({type: 1})}>出售</Text>
+                        </View>
+                    </View>
+                    <View style={styles.formWrap_line}>
+                        <Text style={styles.formWrap_line_title}>价格：</Text>
+                        <View style={styles.formWrap_line_right}>
+                            <TextInput
+                                style={styles.formWrap_line_input}
+                                placeholder="请输入价格"
+                                defaultValue={this.state.price}
+                            />
+                        </View>
+                    </View>
+                    <View style={styles.formWrap_line}>
+                        <Text style={styles.formWrap_line_title}>数量：</Text>
+                        <View style={styles.formWrap_line_right}>
+                            <TextInput
+                                style={styles.formWrap_line_input}
+                                placeholder="请输入数量"
+                                defaultValue={this.state.num}
+                            />
+                            <Text style={styles.publish_line_item_coin}>XMI</Text>
+                        </View>
+                    </View>
+                    <View style={styles.formWrap_line}>
+                        <Text style={styles.formWrap_line_title}>交易类型：</Text>
+                        <View style={styles.formWrap_line_right}>
+                            <Image style={{width: 21, height: 18, marginRight: 12}} source={wx}/>
+                            <Image style={{width: 20, height: 20, marginRight: 17}} source={ali}/>
+                            <Image style={{width: 32, height: 20}} source={yl}/>
+                        </View>
+                    </View>
+                    <View style={styles.formWrap_line}>
+                        <Text style={styles.formWrap_line_title}>交易密码：</Text>
+                        <View style={styles.formWrap_line_right}>
+                            <TextInput
+                                style={styles.formWrap_line_input}
+                                placeholder="请输入交易密码"
+                                secureTextEntry={true}
+                                defaultValue={this.state.pwd}
+                            />
+                        </View>
+                    </View>
+                    <Button
+                        onPress={() => console.log(1)}
+                        title="发布订单"
+                        color="#1FC26D"/>
+                </View>
+            </ScrollView>
+        );
+    }
+
+}
+
 export default class C2c extends Component {
     constructor(props) {
         super(props);
@@ -102,6 +194,9 @@ export default class C2c extends Component {
                 }
                 {
                     this.state.navIndex === 1 && <Sell/>
+                }
+                {
+                    this.state.navIndex === 2 && <Publish/>
                 }
             </View>
         );
@@ -169,5 +264,73 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: 'bold',
         borderRadius: 13,
+    },
+    bindPayType: {
+        width: '100%',
+        height: 54,
+        marginBottom: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    formWrap: {
+        marginLeft: 15,
+        marginRight: 15,
+        marginBottom: 20,
+        padding: 22,
+        borderRadius: 10,
+        elevation: 1,
+        shadowColor: 'rgba(226,226,226,0.5)',  //  阴影颜色
+        shadowOffset: {width: 0, height: 0},  // 阴影偏移
+        backgroundColor: '#fff',
+    },
+    formWrap_title: {
+        flexDirection: 'row',
+        marginBottom: 17,
+    },
+    formWrap_title_text: {
+        marginBottom: 20,
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#333333',
+    },
+    formWrap_title_num: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#16CF7A',
+    },
+    formWrap_line: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 15,
+    },
+    formWrap_line_title: {
+        width: 80,
+        marginRight: 10,
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#333333',
+    },
+    formWrap_line_input: {
+        flex: 1,
+    },
+    publish_line_item_coin: {
+        paddingRight: 10,
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#7B8292',
+    },
+    formWrap_line_right: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        height: 40,
+    },
+    formWrap_line_btn: {
+        width: 60,
+        height: 33,
+        marginRight: 10,
+        lineHeight: 33,
+        textAlign: 'center',
+        backgroundColor: '#F2F2F2',
     },
 });
