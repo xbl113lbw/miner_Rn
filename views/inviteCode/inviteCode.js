@@ -6,18 +6,40 @@ import {Toast} from 'teaset';
 export default class InviteCode extends Component {
     constructor(props) {
         super(props);
+
+        this.state = {
+            promoter_no: '',
+        };
+
+        this.getUserInfoEvent = this.getUserInfoEvent.bind(this);
     }
+
+    componentDidMount() {
+        this.props.navigation.addListener('focus', () => {
+            this.getUserInfoEvent();
+        });
+    }
+
+    getUserInfoEvent() {
+        global.Ajax('appapi/user/getUserInfo').then((res) => {
+            if (res.code === 1) {
+                console.log(res);
+                this.setState({
+                    promoter_no: res.data.promoter_no,
+                });
+            }
+        });
+    }
+
 
     render() {
         return (
             <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
                 <ImageBackground source={require('../../img/invite_bg.jpg')} style={styles.bgWrap}>
                     <View style={styles.erCode}>
-                        <QRCode
-                            value={'11111'}
-                            size={100}/>
+                        <QRCode value={'11111111'} size={100}/>
                     </View>
-                    <Text style={styles.inviteCode}>我的邀请码：3AYW9P</Text>
+                    <Text style={styles.inviteCode}>我的邀请码：{this.state.promoter_no}</Text>
                     <TouchableOpacity style={styles.copyBtn}
                                       onPress={() => {
                                           Toast.success('复制成功');

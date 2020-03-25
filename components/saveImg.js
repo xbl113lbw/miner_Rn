@@ -1,53 +1,26 @@
-import {Platform, CameraRoll} from 'react-native';
-import RNFS from 'react-native-fs';
+import {Platform} from 'react-native';
+import CameraRoll from '@react-native-community/cameraroll';
 
-/**
- * 下载网页图片
- * @param uri  图片地址
- * @returns {*}
- */
-const DownloadImage = (uri) => {
-    if (!uri) {
-        return null;
-    }
-    console.log(111);
-    return new Promise((resolve, reject) => {
-        let timestamp = (new Date()).getTime();//获取当前时间错
-        let random = String(((Math.random() * 1000000) | 0));//六位随机数
-        let dirs = Platform.OS === 'ios' ? RNFS.LibraryDirectoryPath : RNFS.ExternalDirectoryPath; //外部文件，共享目录的绝对路径（仅限android）
-        const downloadDest = `${dirs}/${timestamp + random}.jpg`;
-        const formUrl = uri;
-        const options = {
-            fromUrl: formUrl,
-            toFile: downloadDest,
-            background: true,
-            begin: (res) => {
-                // console.log('begin', res);
-                // console.log('contentLength:', res.contentLength / 1024 / 1024, 'M');
-            },
-        };
-        try {
-            console.log('success');
-            const ret = RNFS.downloadFile(options);
-            ret.promise.then(res => {
-                // console.log('success', res);
-                // console.log('file://' + downloadDest)
-                let promise = CameraRoll.saveToCameraRoll(downloadDest);
-                promise.then(function (result) {
-                    console.log('success', '成功');
-                    // alert('保存成功！地址如下：\n' + result);
-                }).catch(function (error) {
-                    console.log('error', error);
-                    // alert('保存失败！\n' + error);
-                });
-                resolve(res);
-            }).catch(err => {
-                reject(new Error(err));
+const RNFS = require('react-native-fs'); //文件处理
+
+let saveImg = (saveImageUrl) => {
+    console.log(saveImageUrl);
+    const storeLocation = `${RNFS.DocumentDirectoryPath}`;
+    let pathName = new Date().getTime() + '文件名.png';
+    let downloadDest = `${storeLocation}/${pathName}`;
+    const ret = RNFS.downloadFile({fromUrl: saveImageUrl, toFile: downloadDest});
+    ret.promise.then(res => {
+        console.log(res);
+        if (res && res.statusCode === 200) {
+            let promise = CameraRoll.saveToCameraRoll('file://' + downloadDest);
+            promise.then(function (result) {
+                console.log('图片已保存至相册');
+            }).catch(function (error) {
+                console.log('保存失败');
             });
-        } catch (e) {
-            reject(new Error(e));
         }
     });
 };
-export default DownloadImage;
+
+export default saveImg;
 

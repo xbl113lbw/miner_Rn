@@ -9,10 +9,11 @@ class MyInlineWeb extends Component {
     }
 
     render() {
+        let time = global.formatDate(this.props.webObj.create_time, 2);
         let webHtml = `<div style="margin:30px;padding: 20px">
-            <h1 style="font-size: 60px;font-weight: bold;text-align: center">Hello world</h1>
-            <div style="font-size:30px;text-align: right;color:#999;margin-bottom:40px">2019-09-26 11:52:32</div>
-            <div style="font-size: 40px;font-weight: bold;">内容${this.props.id}</div>
+            <h1 style="font-size: 40px;font-weight: bold;text-align: center">${this.props.webObj.notice_title}</h1>
+            <div style="font-size:30px;text-align: right;color:#999;margin-bottom:40px">${time}</div>
+            <div style="font-size: 40px;font-weight: bold;">${this.props.webObj.notice_content}</div>
             </div>`;
 
         return (
@@ -27,12 +28,32 @@ class MyInlineWeb extends Component {
 export default class NoticeInfo extends Component {
     constructor(props) {
         super(props);
+        this.state = {
+            webObj: {},
+        };
+        this.getData = this.getData.bind(this);
+    }
+
+    componentDidMount() {
+        this.props.navigation.addListener('focus', () => {
+            this.getData();
+        });
+    }
+
+    getData() {
+        let {id} = this.props.route.params;
+        global.Ajax('appapi/index/getNotice', {id: id}).then(res => {
+            if (res.code === 1) {
+                this.setState({
+                    webObj: res.data,
+                });
+            }
+        });
     }
 
     render() {
-        let {id} = this.props.route.params;
         return (
-            <MyInlineWeb id={id}/>
+            <MyInlineWeb id={id} webObj={this.state.webObj}/>
         );
     }
 }

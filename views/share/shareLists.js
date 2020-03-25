@@ -4,6 +4,40 @@ import {StyleSheet, View, Text, FlatList} from 'react-native';
 export default class ShareLists extends Component {
     constructor(props) {
         super(props);
+
+        this.state = {
+            listData: [],
+        };
+
+        this.getData = this.getData.bind(this);
+        this.getStatus = this.getStatus.bind(this);
+    }
+
+    componentDidMount() {
+        this.props.navigation.addListener('focus', () => {
+            this.getData();
+        });
+    }
+
+
+    getData(page = 1) {
+        global.Ajax('appapi/User/picSignList', {page}).then((res) => {
+            if (res.code === 1) {
+                this.setState({
+                    listData: res.data.data,
+                });
+            }
+        });
+    }
+
+    getStatus(status) {
+        const statusMap = {
+            2: '等待审核',
+            1: '审核通过',
+            3: '拒绝',
+        };
+        return statusMap[status];
+
     }
 
     render() {
@@ -15,16 +49,18 @@ export default class ShareLists extends Component {
                     <Text style={{fontSize: 14, color: '#999', flex: 1}}>奖励</Text>
                     <Text style={{fontSize: 14, color: '#999', flex: 1}}>金额</Text>
                 </View>
-                <FlatList
-                    data={[1, 2, 3, 4]}
-                    renderItem={({item}) =>
+                {
+                    this.state.listData.length > 0 && <FlatList data={this.state.listData} renderItem={({item}) =>
                         <View style={styles.nav_list}>
-                            <Text style={styles.time}>2018-06-20 16:00</Text>
-                            <Text style={styles.num}>第一天</Text>
-                            <Text style={[styles.num, styles.green]}>+2HT</Text>
-                            <Text style={[styles.num, styles.green]}>已转账</Text>
+                            <Text style={styles.time}>{global.formatDate(item.time_int)}</Text>
+                            <Text style={styles.num}>第{item.day_num}天</Text>
+                            <Text style={[styles.num, styles.green]}>
+                                {item.num} {item.coin.toLocaleUpperCase()}
+                            </Text>
+                            <Text style={[styles.num, styles.green]}>{this.getStatus(item.status)}</Text>
                         </View>}
-                />
+                    />
+                }
             </View>
         );
     }

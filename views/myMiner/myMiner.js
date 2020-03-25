@@ -1,5 +1,7 @@
 import React, {Component} from 'react';
-import {StyleSheet, View, Text, Image, FlatList} from 'react-native';
+import {StyleSheet, View, Text, Image, FlatList, Alert} from 'react-native';
+import Toast from 'teaset';
+import Nav from '../../components/nav';
 
 class Lists extends Component {
     constructor(props) {
@@ -7,28 +9,29 @@ class Lists extends Component {
     }
 
     render() {
+        let {good_list} = this.props;
         return (
+            good_list.length > 0 &&
             <FlatList
-                data={[1, 2, 3, 4, 5, 6]}
-                keyExtractor={(item, index) => index}
+                data={good_list}
                 renderItem={({item}) => <View style={styles.lists}>
                     <Image source={require('../../img/miner.png')} style={{width: 75, height: 82}}/>
                     <View style={styles.lists_right}>
                         <View style={styles.lists_right_line}>
                             <Text style={styles.lists_right_line_l}>矿机类型：</Text>
-                            <Text style={styles.lists_right_line_r}>微型矿机</Text>
+                            <Text style={styles.lists_right_line_r}>{item.good_name}</Text>
                         </View>
                         <View style={styles.lists_right_line}>
                             <Text style={styles.lists_right_line_l}>矿机已产币：</Text>
-                            <Text style={styles.lists_right_line_r}>0.0000</Text>
+                            <Text style={styles.lists_right_line_r}>{item.get_num}</Text>
                         </View>
                         <View style={styles.lists_right_line}>
                             <Text style={styles.lists_right_line_l}>是否有效：</Text>
-                            <Text style={styles.lists_right_line_r}>有效</Text>
+                            <Text style={styles.lists_right_line_r}>{item.status === 1 ? '有效' : '无效'}</Text>
                         </View>
                         <View style={styles.lists_right_line}>
-                            <Text style={styles.lists_right_line_l}>矿机已产币：</Text>
-                            <Text style={styles.lists_right_line_r}>2019-10-20 16:00</Text>
+                            <Text style={styles.lists_right_line_l}>购买日期：</Text>
+                            <Text style={styles.lists_right_line_r}>{item.add_time}</Text>
                         </View>
                     </View>
                 </View>}/>
@@ -39,23 +42,86 @@ class Lists extends Component {
 export default class myMiner extends Component {
     constructor(props) {
         super(props);
+
+        this.state = {
+            good_list: [],
+            useful_good: '',
+            unuseful_good: '',
+            cash_num: '',
+        };
+
+        this.onRecive = this.onRecive.bind(this);
+        this.getData = this.getData.bind(this);
+    }
+
+    /*传递至头部事件*/
+    onRecive() {
+        if (!this.state.useful_good) {
+            Toast.fail('暂不可领取');
+            return;
+        }
+        Alert.alert(
+            '领取',
+            `矿机已产币： ${this.state.cash_num}`,
+            [
+                {
+                    text: '一键领取',
+                    onPress: () => {
+                        global.Ajax('appapi/Miner/getMinerCoin', {}).then((res) => {
+                            if (res.code === 1) {
+                                Toast.success('领取成功');
+                                this.getData();
+                            }
+                        });
+                    },
+                },
+            ],
+            {cancelable: true},
+        );
+    }
+
+    componentDidMount() {
+        this.props.navigation.addListener('focus', () => {
+            this.getData();
+        });
+    }
+
+    getData() {
+        global.Ajax('appapi/Miner/myGoods', {status: 0}).then((res) => {
+            if (res.code === 1) {
+                console.log(res);
+                this.setState({
+                    good_list: res.data.good_list.data,
+                    useful_good: res.data.useful_good,
+                    unuseful_good: res.data.unuseful_good,
+                    cash_num: res.data.cash_num,
+                });
+            }
+        });
     }
 
     render() {
         return (
             <View style={{backgroundColor: '#fff', flex: 1}}>
+                {/*头部导航*/}
+                <Nav title={'我的矿机'} rightText={'一键领取'} rightEvent={this.onRecive} showLeft={true}/>
+                {/*矿机数*/}
                 <View style={[styles.minerInfo, styles.boxShadow]}>
                     <View style={{alignItems: 'center'}}>
-                        <Text style={{fontSize: 17, fontWeight: 'bold', color: '#0EC15E'}}>20</Text>
+                        <Text style={{fontSize: 17, fontWeight: 'bold', color: '#0EC15E'}}>
+                            {this.state.useful_good}
+                        </Text>
                         <Text style={{fontSize: 11, color: '#AEBACB', marginTop: 11}}>有效矿机数</Text>
                     </View>
                     <View style={{alignItems: 'center'}}>
-                        <Text style={{fontSize: 17, fontWeight: 'bold', color: '#DF5334'}}>0</Text>
+                        <Text style={{fontSize: 17, fontWeight: 'bold', color: '#DF5334'}}>
+                            {this.state.unuseful_good}
+                        </Text>
                         <Text style={{fontSize: 11, color: '#AEBACB', marginTop: 11}}>无效矿机数</Text>
                     </View>
                 </View>
                 {/*列表*/}
-                <Lists/>
+                <Lists good_list={this.state.good_list}/>
             </View>
         );
     }

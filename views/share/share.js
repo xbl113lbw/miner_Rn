@@ -1,5 +1,8 @@
 import React, {Component} from 'react';
 import {StyleSheet, View, Text, Image, ScrollView, ImageBackground, Switch, TouchableOpacity} from 'react-native';
+import index from 'react-native-image-picker/src/index';
+import {Toast} from 'teaset';
+
 
 class ShareAndUp extends Component {
     constructor(props) {
@@ -89,14 +92,44 @@ export default class Share extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            switchFlag: false,
+            switchFlag: true,
+            shareData: [],
         };
+
         this.switchChange = this.switchChange.bind(this);
+        this.getData = this.getData.bind(this);
+    }
+
+    componentDidMount() {
+        this.props.navigation.addListener('focus', () => {
+            this.getData();
+        });
     }
 
     switchChange() {
         this.setState({
             switchFlag: !this.state.switchFlag,
+        });
+        global.Ajax('appapi/user/setSignStatus', {
+            status: this.state.switchFlag ? 0 : 2,
+        }).then((res) => {
+            if (res.code === 1) {
+                Toast.success(res.msg || '设置成功');
+            }
+        });
+    }
+
+    getData() {
+        global.Ajax('appapi/user/signInfo', {}, 'get').then(res => {
+            console.log('res', res);
+            if (res.code === 1) {
+                let shareData = [];
+                for (let i in res.data) {
+                    shareData.push(res.data[i]);
+                }
+                this.setState({shareData});
+                console.log(this.state.shareData);
+            }
         });
     }
 
@@ -113,21 +146,23 @@ export default class Share extends Component {
                         </View>
                     </View>
                     <View style={styles.shareImgWrap}>
-                        {[1, 2, 3, 4, 5, 6, 7].map((item, index) => {
-                            return <View style={{justifyContent: 'space-between', alignItems: 'center'}} key={index}>
-                                <ImageBackground source={require('../../img/share/gold.png')}
-                                                 style={{
-                                                     width: 37,
-                                                     height: 37,
-                                                     marginBottom: 10,
-                                                     justifyContent: 'flex-start',
-                                                     alignItems: 'center',
-                                                 }}>
-                                    <Text style={{color: '#fff', fontSize: 9, paddingTop: 6}}>{item}XMI</Text>
-                                </ImageBackground>
-                                <Text style={{color: '#10914A', fontSize: 12}}>{item}天</Text>
-                            </View>;
-                        })}
+                        {
+                            this.state.shareData.length > 0 && this.state.shareData.map((item, index) => {
+                                return <View style={{justifyContent: 'space-between', alignItems: 'center'}}
+                                             key={index}>
+                                    <ImageBackground source={require('../../img/share/gold.png')}
+                                                     style={{
+                                                         width: 37,
+                                                         height: 37,
+                                                         marginBottom: 10,
+                                                         justifyContent: 'flex-start',
+                                                         alignItems: 'center',
+                                                     }}>
+                                        <Text style={{color: '#fff', fontSize: 9, paddingTop: 6}}>{item.num}XMI</Text>
+                                    </ImageBackground>
+                                    <Text style={{color: '#10914A', fontSize: 12}}>{item.sign_num}天</Text>
+                                </View>;
+                            })}
                     </View>
                 </View>
                 {/*分享海报、上传按钮*/}

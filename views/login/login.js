@@ -1,16 +1,78 @@
 import React, {Component} from 'react';
-import {StyleSheet, View, Text, Button, ImageBackground, Image, TextInput} from 'react-native';
+import {StyleSheet, View, Text, Button, Image, TextInput, ScrollView} from 'react-native';
+import {Toast} from 'teaset';
 
 class InputBox extends Component {
     constructor(props) {
         super(props);
-        // code 为验证码登录，pwd 密码登录
+        // code 为验证码登录，password 密码登录
         this.state = {
             type: 'code',
-            phone: '',
+            phone: '18188622791',
             code: '',
-            pwd: '',
+            pwd: '123456789',
+            getCodeText: '获取验证码',
+            codeFlag: true,
         };
+        this.loginEvent = this.loginEvent.bind(this);
+        this.getCode = this.getCode.bind(this);
+    }
+
+    loginEvent() {
+        let obj = {
+            login_type: this.state.type,
+            mobile: this.state.phone,
+            vertification: this.state.code,
+            password: this.state.pwd,
+        };
+        global.Ajax('appapi/login/login', obj).then(res => {
+            console.log('res', res);
+            if (res.code === 1) {
+                global.AsyncStorage.setItem('token', res.data.token);
+                this.props.navigation.navigate('Tab');
+            }
+        });
+    }
+
+    getCode() {
+        if (!this.state.codeFlag) {
+            return;
+        }
+        if (!this.state.phone) {
+            Toast.message('请输入手机号');
+            return;
+        }
+        this.setState({
+            codeFlag: false,
+        });
+        let num = 60;
+        let t = setInterval(() => {
+            this.setState({
+                getCodeText: `${num}秒`,
+            });
+            num--;
+            if (num <= 0) {
+                this.setState({
+                    codeFlag: true,
+                    getCodeText: `获取验证码`,
+                });
+                clearInterval(t);
+            }
+        }, 1000);
+        let params = {
+            mobile: this.state.phone,
+        };
+        global.Ajax('appapi/login/sendSmsLoginCode', params).then(res => {
+            console.log('res', res);
+            if (res.code !== 1) {
+                Toast.message(res.msg);
+                clearInterval(t);
+                this.setState({
+                    codeFlag: true,
+                    getCodeText: `获取验证码`,
+                });
+            }
+        });
     }
 
     render() {
@@ -20,8 +82,8 @@ class InputBox extends Component {
                 <View style={styles.btnBox}>
                     <Text style={[styles.inputBtn, this.state.type === 'code' ? styles.activeBtn : '']}
                           onPress={() => this.setState({type: 'code'})}>验证码登录</Text>
-                    <Text style={[styles.inputBtn, this.state.type === 'pwd' ? styles.activeBtn : '']}
-                          onPress={() => this.setState({type: 'pwd'})}>密码登录</Text>
+                    <Text style={[styles.inputBtn, this.state.type === 'password' ? styles.activeBtn : '']}
+                          onPress={() => this.setState({type: 'password'})}>密码登录</Text>
                 </View>
                 {/*输入框*/}
                 <View style={styles.inputBox}>
@@ -40,7 +102,6 @@ class InputBox extends Component {
                                 value={this.state.phone}/>
                         </View>
                     </View>
-
                     {this.state.type === 'code' ? (
                         // 验证码
                         <View>
@@ -55,7 +116,8 @@ class InputBox extends Component {
                                     placeholder="请输入验证码"
                                     onChangeText={(code) => this.setState({code})}
                                     value={this.state.code}/>
-                                <Text style={styles.input_code_btn}>获取验证码</Text>
+                                <Text style={styles.input_code_btn}
+                                      onPress={this.getCode}>{this.state.getCodeText}</Text>
                             </View>
                         </View>
                     ) : (
@@ -87,7 +149,7 @@ class InputBox extends Component {
                     <Button
                         title="登录"
                         color="#1FC26D"
-                        onPress={() => this.props.navigation.navigate('Tab')}
+                        onPress={this.loginEvent}
                     />
                 </View>
             </View>
@@ -102,14 +164,13 @@ export default class LoginCom extends Component {
 
     render() {
         return (
-            <View style={styles.wrapper}>
-                <ImageBackground source={require('../../img/login/loginBg.png')}
-                                 style={{width: '100%', height: 340, flex: 1}}>
-                    <View style={styles.formWrap}>
-                        <InputBox navigation={this.props.navigation}/>
-                    </View>
-                </ImageBackground>
-            </View>
+            <ScrollView style={styles.wrapper}>
+                <Image source={require('../../img/login/loginBg.png')}
+                       style={{width: '100%', height: 340, position: 'absolute', top: 0}}/>
+                <View style={styles.formWrap}>
+                    <InputBox navigation={this.props.navigation}/>
+                </View>
+            </ScrollView>
         );
     }
 }
@@ -117,17 +178,18 @@ export default class LoginCom extends Component {
 
 const styles = StyleSheet.create({
     wrapper: {
-        height: '100%',
+        flex: 1,
+        minHeight: '100%',
     },
     formWrap: { // 输入框包裹器
         width: '90%',
-        height: 350,
         marginTop: 200,
         marginLeft: '5%',
+        marginBottom: 10,
         backgroundColor: '#fff',
         borderRadius: 10,
-        elevation: 10,  //  设置阴影角度，通过这个设置有无阴影（这个是最重要的，决定有没有阴影）
-        shadowColor: 'black',  //  阴影颜色
+        elevation: 2,  //  设置阴影角度，通过这个设置有无阴影（这个是最重要的，决定有没有阴影）
+        shadowColor: 'rgba(56,109,65,0.12)',  //  阴影颜色
         shadowOffset: {width: 0, height: 0},  // 阴影偏移
         overflow: 'hidden',
     },

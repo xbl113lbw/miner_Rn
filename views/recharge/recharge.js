@@ -1,11 +1,33 @@
 import React, {Component} from 'react';
 import {StyleSheet, View, Text, Image, ScrollView, Clipboard, TouchableOpacity} from 'react-native';
+import QRCode from 'react-native-qrcode-svg';
 import {Toast} from 'teaset';
-import DownloadImage from '../../components/saveImg';
 
 export default class Recharge extends Component {
     constructor(props) {
         super(props);
+
+        this.getAddress = this.getAddress.bind(this);
+        this.state = {
+            address: null,
+        };
+    }
+
+    componentDidMount() {
+        this.props.navigation.addListener('focus', () => {
+            this.getAddress();
+        });
+    }
+
+    getAddress() {
+        global.Ajax('appapi/Coin/getAddress', {coin: 'usdt'}).then((res) => {
+            if (res.code === 1) {
+                console.log(res);
+                this.setState({
+                    address: res.data.address,
+                });
+            }
+        });
     }
 
     render() {
@@ -15,33 +37,32 @@ export default class Recharge extends Component {
                     <View style={[styles.chooseCoin, styles.boxShadow]}>
                         <Text style={{fontSize: 13, color: '#6F788B'}}>选择充值币种</Text>
                         <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                            <Text
-                                style={{fontSize: 14, color: '#333333', fontWeight: 'bold', marginRight: 13}}>BTC</Text>
+                            <Text style={{fontSize: 14, color: '#333333', fontWeight: 'bold', marginRight: 13}}>
+                                USDT
+                            </Text>
                             <Image style={{width: 6, height: 10}} source={require('../../img/right_icon.png')}/>
                         </View>
                     </View>
                     {/*二维码*/}
-                    <View style={{justifyContent: 'center', alignItems: 'center'}}>
-                        <Image style={styles.erCode} source={require('../../img/teaset1.png')}/>
+                    <View style={{justifyContent: 'center', alignItems: 'center', marginBottom: 26}}>
+                        {
+                            this.state.address && <QRCode value={this.state.address} size={160}/>
+                        }
                     </View>
                     {/*截取二维码保存到相册*/}
-                    <TouchableOpacity style={{alignItems: 'center', marginBottom: 44}}
-                                      onPress={() => {
-                                          DownloadImage('https://cdn4.buysellads.net/uu/1/41334/1550855391-cc_dark.png');
-                                      }
-                                      }>
+                    <TouchableOpacity style={{alignItems: 'center', marginBottom: 44}}>
                         <Text style={styles.saveBtn}>截取二维码保存到相册</Text>
                     </TouchableOpacity>
                     {/*充值地址*/}
                     <View style={styles.address}>
                         <Text style={{fontSize: 13, color: '#6F788B'}}>充值地址：</Text>
-                        <Text style={styles.address_info}>ASDA45SDSA5D4A5SD4SDA5S4DA5SD46D4AWSDAD54ASA65S4...</Text>
+                        <Text style={styles.address_info}>{this.state.address}</Text>
                     </View>
                     {/*复制二维码按钮*/}
                     <TouchableOpacity style={{alignItems: 'center', marginTop: 25, marginBottom: 23}}
                                       onPress={() => {
                                           Toast.success('复制成功');
-                                          Clipboard.setString('hello world');
+                                          Clipboard.setString(this.state.address);
                                       }}>
                         <Text style={styles.copyBtn}>复制二维码</Text>
                     </TouchableOpacity>

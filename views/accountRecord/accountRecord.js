@@ -4,22 +4,56 @@ import {StyleSheet, View, Text, FlatList} from 'react-native';
 export default class AccountRecord extends Component {
     constructor(props) {
         super(props);
+
+        this.state = {
+            listData: [],
+        };
+        this.getListsData = this.getListsData.bind(this);
+    }
+
+    componentDidMount() {
+        this.props.navigation.addListener('focus', () => {
+            this.getListsData();
+        });
+    }
+
+    getListsData() {
+        global.Ajax('appapi/user/getLog', {coin: ''}).then(res => {
+            if (res.code === 1) {
+                console.log(res);
+                this.setState({
+                    listData: res.data.data,
+                });
+            }
+        });
     }
 
     render() {
         return (
-            <View style={{margin: 15}}>
-                <View style={{paddingLeft: 20, paddingRight: 20, backgroundColor: '#fff'}}>
+            <View style={{marginTop: 15, marginBottom: 15}}>
+                {
+                    this.state.listData.length > 0 &&
                     <FlatList
-                        data={[1, 2, 3, 4, 5]}
+                        style={styles.FlatList}
+                        data={this.state.listData} keyExtractor={(item, index) => `${index}`}
                         renderItem={({item}) => <View style={styles.list}>
                             <View>
-                                <Text style={{fontSize: 12, color: '#3E3E3E', fontWeight: 'bold'}}>团队算力</Text>
-                                <Text style={{fontSize: 11, color: '#999999', marginTop: 5}}>2019-12-12 15:11:04</Text>
+                                <Text style={{
+                                    fontSize: 12,
+                                    color: '#3E3E3E',
+                                    fontWeight: 'bold',
+                                }}>{item.text}</Text>
+                                <Text style={{fontSize: 11, color: '#999999', marginTop: 5}}>
+                                    {global.formatDate(item.create_time, 2)}
+                                </Text>
                             </View>
-                            <Text style={{fontSize: 15, color: '#3E3E3E', fontWeight: 'bold'}}>+10.0000</Text>
+                            <Text style={{
+                                fontSize: 15,
+                                color: '#3E3E3E',
+                                fontWeight: 'bold',
+                            }}>{item.number}</Text>
                         </View>}/>
-                </View>
+                }
             </View>
         );
     }
@@ -31,5 +65,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         height: 67,
+    },
+    FlatList: {
+        marginLeft: 15,
+        marginRight: 15,
+        paddingLeft: 20,
+        paddingRight: 20,
+        backgroundColor: '#fff',
     },
 });

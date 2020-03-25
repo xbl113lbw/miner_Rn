@@ -9,14 +9,15 @@ class Swiper extends Component {
     }
 
     render() {
+        let {slideData} = this.props;
         return (
             <Carousel style={styles.swiper} control={true}>
-                <Image style={{width: '100%', height: 133}} resizeMode='cover'
-                       source={require('../../img/teaset1.png')}/>
-                <Image style={{width: '100%', height: 133}} resizeMode='cover'
-                       source={require('../../img/teaset1.png')}/>
-                <Image style={{width: '100%', height: 133}} resizeMode='cover'
-                       source={require('../../img/teaset1.png')}/>
+                {
+                    slideData.map((item, index) => {
+                        return <Image source={{uri: item.adv_image}} style={{width: '100%', height: 133}}
+                                      key={index}/>;
+                    })
+                }
             </Carousel>
         );
     }
@@ -85,50 +86,26 @@ class Mill extends Component {
     }
 
     render() {
-        /*
-        * title：标题
-        * img：图片地址
-        * production：总产量
-        * rent：租金
-        * force：算力
-        * */
-        let millArr = [
-            {
-                title: '微型矿机30天',
-                img: require('../../img/index/smaller_mill.png'),
-                production: '15',
-                rent: '10',
-                force: '1',
-            },
-            {
-                title: '小型矿机60天',
-                img: require('../../img/index/small_mill.png'),
-                production: '150',
-                rent: '100',
-                force: '10',
-            },
-            {
-                title: '中型矿机60天',
-                img: require('../../img/index/middle_mill.png'),
-                production: '450',
-                rent: '300',
-                force: '30',
-            },
-            {
-                title: '大型矿机80天',
-                img: require('../../img/index/big_mill.png'),
-                production: '1760',
-                rent: '1000',
-                force: '100',
-            },
-            {
-                title: '超级矿机60天',
-                img: require('../../img/index/max_mill.png'),
-                production: '2520',
-                rent: '2000',
-                force: '200',
-            },
-        ];
+        let millArr = this.props.goods.map(item => {
+            switch (item.good_id) {
+                case 1:
+                    item.img = require('../../img/index/smaller_mill.png');
+                    break;
+                case 2:
+                    item.img = require('../../img/index/small_mill.png');
+                    break;
+                case 3:
+                    item.img = require('../../img/index/middle_mill.png');
+                    break;
+                case 4:
+                    item.img = require('../../img/index/big_mill.png');
+                    break;
+                case 5:
+                    item.img = require('../../img/index/max_mill.png');
+                    break;
+            }
+            return item;
+        });
         return (
             <View style={styles.millWrap}>
                 <Text style={styles.millWrap_title}>矿机</Text>
@@ -152,15 +129,15 @@ class Mill extends Component {
                                         <View style={styles.list_center_num}>
                                             <View style={styles.list_center_num_list}>
                                                 <Text
-                                                    style={[styles.list_center_num_list_topNum, styles.red_font]}>{item.production}</Text>
+                                                    style={[styles.list_center_num_list_topNum, styles.red_font]}>{item.all_num}</Text>
                                                 <Text style={styles.list_center_num_list_bottom_text}>总产量</Text>
                                             </View>
                                             <View style={styles.list_center_num_list}>
-                                                <Text style={styles.list_center_num_list_topNum}>{item.rent}</Text>
+                                                <Text style={styles.list_center_num_list_topNum}>{item.price}</Text>
                                                 <Text style={styles.list_center_num_list_bottom_text}>租金</Text>
                                             </View>
                                             <View style={styles.list_center_num_list}>
-                                                <Text style={styles.list_center_num_list_topNum}>{item.force}</Text>
+                                                <Text style={styles.list_center_num_list_topNum}>{item.computing}</Text>
                                                 <Text style={styles.list_center_num_list_bottom_text}>算力</Text>
                                             </View>
                                         </View>
@@ -168,7 +145,7 @@ class Mill extends Component {
                                     {/*按钮区*/}
                                     <View style={styles.list_right}>
                                         <View style={{marginBottom: 12}}>
-                                            <Text style={styles.list_right_title}>限租3台</Text>
+                                            <Text style={styles.list_right_title}>限租{item.limit}台</Text>
                                             <Image style={styles.list_right_title_bg}
                                                    source={require('../../img/index/text_line.png')}/>
                                         </View>
@@ -188,6 +165,35 @@ class Mill extends Component {
 }
 
 export default class Home extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            slideData: [],
+            goods: [],
+        };
+
+        this.getData = this.getData.bind(this);
+    }
+
+    componentDidMount() {
+        this.props.navigation.addListener('focus', () => {
+            this.getData();
+        });
+    }
+
+    getData() {
+        global.Ajax('appapi/index/indexData', {}, 'get').then(res => {
+            if (res.code === 1) {
+                console.log(res);
+                this.setState({
+                    slideData: res.data.slide,
+                    goods: res.data.goods,
+                });
+            }
+        });
+    }
+
+
     render() {
         return (
             <View style={{flex: 1}}>
@@ -205,7 +211,9 @@ export default class Home extends Component {
                         </TouchableOpacity>
                     </View>
                     {/*轮播*/}
-                    <Swiper/>
+                    {
+                        this.state.slideData.length > 0 && <Swiper slideData={this.state.slideData}/>
+                    }
                     {/*公告*/}
                     <Announcement/>
                     {/*首页导航*/}
@@ -214,13 +222,16 @@ export default class Home extends Component {
                     <TouchableOpacity
                         style={{alignItems: 'center', marginBottom: 25, paddingLeft: 16, paddingRight: 16}}
                         onPress={() => {
-                            this.props.navigation.navigate('NoticeInfo', {id: 1});
+                            this.props.navigation.navigate('NoticeInfo', {id: 21});
                         }}>
                         <Image style={{width: '100%', height: 69}}
                                source={require('../../img/index/jc_bg.png')}/>
                     </TouchableOpacity>
                     {/*矿机*/}
-                    <Mill navigation={this.props.navigation}/>
+                    {
+                        this.state.goods.length > 0 &&
+                        <Mill navigation={this.props.navigation} goods={this.state.goods}/>
+                    }
                 </ScrollView>
             </View>
         );

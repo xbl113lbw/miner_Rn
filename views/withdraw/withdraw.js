@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import {StyleSheet, View, Text, Image, ScrollView, Button, TouchableOpacity, TextInput} from 'react-native';
+import {Toast} from 'teaset';
 
 export default class withdraw extends Component {
     constructor(props) {
@@ -7,9 +8,56 @@ export default class withdraw extends Component {
         this.state = {
             num: '',
             address: '',
-            pwd: '',
+            paypassword: '',
+            fee: '',
+            balance: '',
         };
+
+        this.getWithdraw = this.getWithdraw.bind(this);
+        this.widtdraw = this.widtdraw.bind(this);
     }
+
+    componentDidMount() {
+        this.props.navigation.addListener('focus', () => {
+            this.getWithdraw();
+        });
+    }
+
+    getWithdraw() {
+        global.Ajax('appapi/user/withdrawInfo', {coin: 'usdt'}).then((res) => {
+            if (res.code === 1) {
+                this.setState({
+                    fee: res.data.fee,
+                    balance: res.data.balance,
+                });
+            }
+        });
+    }
+
+    widtdraw() {
+        if (parseInt(this.state.num) > parseInt(this.state.balance)) {
+            Toast.message('提现金额不能大余额');
+            return;
+        }
+        if (!this.state.paypassword) {
+            Toast.message('请输入交易密码');
+            return;
+        }
+        let data = {
+            num: this.state.num,
+            coin: 'usdt',
+            paypassword: this.state.paypassword,
+            address: this.state.address,
+        };
+        global.Ajax('appapi/user/addCointowithdraw', data).then((res) => {
+            if (res.code === 1) {
+                console.log(res);
+                Toast.message(res.msg || '提币成功');
+                this.getWithdraw();
+            }
+        });
+    }
+
 
     render() {
         return (
@@ -34,7 +82,7 @@ export default class withdraw extends Component {
                         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: 43,
                     }}>
                         <Text style={{fontSize: 13, color: '#333', fontWeight: 'bold'}}>USDT余额</Text>
-                        <Text style={{fontSize: 14, color: '#0EC15E', fontWeight: 'bold'}}>0.24758</Text>
+                        <Text style={{fontSize: 14, color: '#0EC15E', fontWeight: 'bold'}}>{this.state.balance}</Text>
                     </View>
                 </View>
                 <View style={{
@@ -66,14 +114,14 @@ export default class withdraw extends Component {
                         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 35,
                     }}>
                         <Text style={{fontSize: 13, color: '#8D929C', fontWeight: 'bold'}}>
-                            可提数量: <Text style={{color: '#333333'}}>1680.00000</Text> CNY
+                            可提数量: <Text style={{color: '#333333'}}>{this.state.balance}</Text> USDT
                         </Text>
-                        <Text style={{fontSize: 14, color: '#1FC26D', fontWeight: 'bold'}}>全部</Text>
+                        <Text style={{fontSize: 14, color: '#1FC26D', fontWeight: 'bold'}} onPress={() => {
+                            this.setState({num: this.state.balance});
+                        }}>全部</Text>
                     </View>
                     {/*钱包地址*/}
-                    <View style={{
-                        marginBottom: 16,
-                    }}>
+                    <View style={{marginBottom: 16}}>
                         <Text style={{fontSize: 15, color: '#333', fontWeight: 'bold', marginBottom: 11}}>钱包地址</Text>
                         <TextInput
                             style={[styles.input, {height: 43, paddingLeft: 13}]}
@@ -91,20 +139,18 @@ export default class withdraw extends Component {
                         }}>
                             <Text style={{fontSize: 13, color: '#6F788B', fontWeight: 'bold'}}>手续费</Text>
                             <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                                <Text style={{fontSize: 14, color: '#333', fontWeight: 'bold'}}>0.05230</Text>
+                                <Text style={{fontSize: 14, color: '#333', fontWeight: 'bold'}}>{this.state.fee}</Text>
                                 <Text style={{fontSize: 14, color: '#7B8292', fontWeight: 'bold', marginLeft: 11}}>
                                     USDT
                                 </Text>
                             </View>
                         </View>
-                        <View style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                        }}>
+                        <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
                             <Text style={{fontSize: 13, color: '#6F788B', fontWeight: 'bold'}}>实际到账</Text>
                             <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                                <Text style={{fontSize: 14, color: '#333', fontWeight: 'bold'}}>0.05230</Text>
+                                <Text style={{fontSize: 14, color: '#333', fontWeight: 'bold'}}>
+                                    {(this.state.num - this.state.fee) > 0 ? this.state.num - this.state.fee : 0}
+                                </Text>
                                 <Text style={{fontSize: 14, color: '#7B8292', fontWeight: 'bold', marginLeft: 11}}>
                                     USDT
                                 </Text>
@@ -112,22 +158,20 @@ export default class withdraw extends Component {
                         </View>
                     </View>
                     {/*交易密码*/}
-                    <View style={{
-                        marginBottom: 41,
-                    }}>
-                        <Text style={{fontSize: 15, color: '#333', fontWeight: 'bold', marginBottom: 11}}>钱包地址</Text>
+                    <View style={{marginBottom: 41}}>
+                        <Text style={{fontSize: 15, color: '#333', fontWeight: 'bold', marginBottom: 11}}>交易密码</Text>
                         <TextInput
                             style={[styles.input, {height: 43, paddingLeft: 13}]}
                             placeholder="请输入交易密码"
                             secureTextEntry={true}
-                            onChangeText={(pwd) => this.setState({pwd})}
-                            value={this.state.pwd}/>
+                            onChangeText={(paypassword) => this.setState({paypassword})}
+                            value={this.state.paypassword}/>
                     </View>
                     {/*按钮*/}
                     <Button
                         title="立即提币"
                         color="#1FC26D"
-                        onPress={() => console.log(1)}
+                        onPress={this.widtdraw}
                     />
                 </View>
             </ScrollView>

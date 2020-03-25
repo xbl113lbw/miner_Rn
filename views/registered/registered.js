@@ -1,16 +1,111 @@
 import React, {Component} from 'react';
-import {StyleSheet, View, Text, Button, Image, TextInput, ScrollView} from 'react-native';
+import {StyleSheet, View, Text, Button, Image, TextInput, ScrollView, TouchableOpacity} from 'react-native';
+import {Toast} from 'teaset';
 
 class InputBox extends Component {
     constructor(props) {
         super(props);
-        // code 为验证码注册处，pwd 密码注册
+        // code 为验证码注册处，password 密码注册
+        let num = Math.random();
+        this.captchaToken = Math.ceil(Math.random() * 10000000);
         this.state = {
             type: 'code',
-            phone: '',
+            mobile: '17601042712',
+            vertification: '',
             code: '',
-            pwd: '',
+            password: '',
+            pid: '3AYW9P',
+            ImgCodeSrc: `${global.baseUrl}/appapi/Captcha/index?t=${num}&token=${this.captchaToken}`,
+            getCodeText: '获取验证码',
+            codeFlag: true,
         };
+
+        this.getImgCode = this.getImgCode.bind(this);
+        this.getCode = this.getCode.bind(this);
+        this.registeredEvent = this.registeredEvent.bind(this);
+    }
+
+    // 获取图片验证
+    getImgCode() {
+        let num = Math.random();
+        this.captchaToken = Math.ceil(Math.random() * 10000000);
+        let ImgCodeSrc = `${global.baseUrl}/appapi/Captcha/index?t=${num}&token=${this.captchaToken}`;
+        this.setState({
+            ImgCodeSrc,
+        });
+    }
+
+    getCode() {
+        if (!this.state.codeFlag) {
+            return;
+        }
+        if (!this.state.mobile) {
+            Toast.message('请输入手机号');
+            return;
+        }
+        this.setState({
+            codeFlag: false,
+        });
+        let num = 60;
+        let t = setInterval(() => {
+            this.setState({
+                getCodeText: `${num}秒`,
+            });
+            num--;
+            if (num <= 0) {
+                this.setState({
+                    codeFlag: true,
+                    getCodeText: `获取验证码`,
+                });
+                clearInterval(t);
+            }
+        }, 1000);
+        let params = {
+            mobile: this.state.mobile,
+            vertification: this.state.vertification,
+            token: this.captchaToken,
+        };
+        global.Ajax('appapi/Register/sendSmsRegisterCode', params).then(res => {
+            if (res.code !== 1) {
+                clearInterval(t);
+                this.getImgCode();
+                this.setState({
+                    codeFlag: true,
+                    getCodeText: `获取验证码`,
+                });
+            }
+        });
+    }
+
+    registeredEvent() {
+        if (!this.state.mobile) {
+            Toast.message('请输入手机号');
+            return;
+        }
+        if (!this.state.vertification) {
+            Toast.message('请输入图形验证码');
+            return;
+        }
+
+        if (!this.state.pid) {
+            Toast.message('请输入邀请码');
+            return;
+        }
+        let parmas = {
+            mobile: this.state.mobile,
+            pid: this.state.pid,
+            vertification: this.state.code,
+            password: this.state.type === 'password' ? this.state.password : '',
+            register_type: this.state.type === 'password' ? 'password' : '',
+        };
+        global.Ajax('appapi/Register/register', parmas).then(res => {
+            if (res.code === 1) {
+                global.AsyncStorage.setItem('token', res.data.token);
+                this.props.navigation.navigate('Tab');
+            } else {
+                this.getImgCode();
+            }
+        });
     }
 
     render() {
@@ -20,8 +115,8 @@ class InputBox extends Component {
                 <View style={styles.btnBox}>
                     <Text style={[styles.inputBtn, this.state.type === 'code' ? styles.activeBtn : '']}
                           onPress={() => this.setState({type: 'code'})}>验证码注册</Text>
-                    <Text style={[styles.inputBtn, this.state.type === 'pwd' ? styles.activeBtn : '']}
-                          onPress={() => this.setState({type: 'pwd'})}>密码注册</Text>
+                    <Text style={[styles.inputBtn, this.state.type === 'password' ? styles.activeBtn : '']}
+                          onPress={() => this.setState({type: 'password'})}>密码注册</Text>
                 </View>
                 {/*输入框*/}
                 <View style={styles.inputBox}>
@@ -36,8 +131,8 @@ class InputBox extends Component {
                             <TextInput
                                 style={styles.input}
                                 placeholder="请输入手机号码"
-                                onChangeText={(phone) => this.setState({phone})}
-                                value={this.state.phone}/>
+                                onChangeText={(mobile) => this.setState({mobile})}
+                                value={this.state.mobile}/>
                         </View>
                     </View>
                     {/*图形验证码*/}
@@ -51,10 +146,11 @@ class InputBox extends Component {
                             <TextInput
                                 style={styles.input}
                                 placeholder="请输入图形验证码"
-                                onChangeText={(phone) => this.setState({phone})}
-                                value={this.state.phone}/>
-                            <Image source={require('../../img/login/safe.png')}
-                                   style={styles.code_img}/>
+                                onChangeText={(vertification) => this.setState({vertification})}
+                                value={this.state.vertification}/>
+                            <TouchableOpacity onPress={this.getImgCode} style={styles.code_img}>
+                                <Image source={{uri: this.state.ImgCodeSrc}} style={styles.code_img}/>
+                            </TouchableOpacity>
                         </View>
                     </View>
                     {this.state.type === 'code' ? (
@@ -71,7 +167,8 @@ class InputBox extends Component {
                                     placeholder="请输入验证码"
                                     onChangeText={(code) => this.setState({code})}
                                     value={this.state.code}/>
-                                <Text style={styles.input_code_btn}>获取验证码</Text>
+                                <Text style={styles.input_code_btn}
+                                      onPress={this.getCode}>{this.state.getCodeText}</Text>
                             </View>
                         </View>
                     ) : (
@@ -87,8 +184,8 @@ class InputBox extends Component {
                                     style={styles.input}
                                     secureTextEntry={true}
                                     placeholder="请输入登录密码"
-                                    onChangeText={(pwd) => this.setState({pwd})}
-                                    value={this.state.pwd}/>
+                                    onChangeText={(password) => this.setState({password})}
+                                    value={this.state.password}/>
                             </View>
                         </View>
                     )}
@@ -103,8 +200,8 @@ class InputBox extends Component {
                             <TextInput
                                 style={styles.input}
                                 placeholder="请输入邀请码"
-                                onChangeText={(code) => this.setState({code})}
-                                value={this.state.code}/>
+                                onChangeText={(pid) => this.setState({pid})}
+                                value={this.state.pid}/>
                         </View>
                     </View>
                     {/*跳转登录页*/}
@@ -118,7 +215,7 @@ class InputBox extends Component {
                     <Button
                         title="注册"
                         color="#1FC26D"
-                        onPress={() => this.props.navigation.navigate('Home')}
+                        onPress={this.registeredEvent}
                     />
                 </View>
             </View>
@@ -151,7 +248,6 @@ export default class registeredCom extends Component {
 const styles = StyleSheet.create({
     wrapper: {
         flex: 1,
-        height: '100%',
     },
     formWrap: { // 输入框包裹器
         width: '90%',
@@ -218,7 +314,7 @@ const styles = StyleSheet.create({
     code_img: {
         position: 'absolute',
         right: 18,
-        width: 56,
+        width: 60,
         height: 23,
     },
     registered: {

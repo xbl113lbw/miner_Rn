@@ -1,5 +1,16 @@
 import React, {Component} from 'react';
-import {StyleSheet, View, Text, FlatList, TextInput, Button, Image, ImageBackground, ScrollView} from 'react-native';
+import {
+    StyleSheet,
+    View,
+    Text,
+    FlatList,
+    TextInput,
+    Button,
+    Image,
+    ImageBackground,
+    ScrollView,
+    TouchableOpacity,
+} from 'react-native';
 
 import wx from '../../img/c2c/wx.png';
 import wx_active from '../../img/c2c/wx_active.png';
@@ -17,7 +28,6 @@ class Buy extends Component {
         return (
             <FlatList
                 data={[1, 2, 3, 4]}
-                keyExtractor={(item, index) => index}
                 renderItem={({item, index}) => <View style={{marginRight: 18, marginLeft: 18}}>
                     <View style={styles.lists}>
                         <View style={styles.lists_line}>
@@ -52,7 +62,6 @@ class Sell extends Component {
         return (
             <FlatList
                 data={[1, 2, 3, 4]}
-                keyExtractor={(item, index) => index}
                 renderItem={({item, index}) => <View style={{marginRight: 18, marginLeft: 18}}>
                     <View style={styles.lists}>
                         <View style={styles.lists_line}>
@@ -93,9 +102,11 @@ class Publish extends Component {
         return (
             <ScrollView>
                 {/*绑定支付方式*/}
-                <ImageBackground source={require('../../img/c2c/pubBg.png')} style={styles.bindPayType}>
-                    <Text>发布前至少绑定一种支付方式<Text style={{color: '#32C3FF'}}>绑定支付方式</Text></Text>
-                </ImageBackground>
+                <TouchableOpacity onPress={() => this.props.navigation.navigate('PayType')}>
+                    <ImageBackground source={require('../../img/c2c/pubBg.png')} style={styles.bindPayType}>
+                        <Text>发布前至少绑定一种支付方式<Text style={{color: '#32C3FF'}}>绑定支付方式</Text></Text>
+                    </ImageBackground>
+                </TouchableOpacity>
                 {/*表单区域*/}
                 <View style={styles.formWrap}>
                     <View style={styles.formWrap_title}>
@@ -178,6 +189,16 @@ export default class C2c extends Component {
         };
     }
 
+    componentDidMount() {
+        this._unsubscribe = this.props.navigation.addListener('focus', () => {
+            console.log('xxxxx');
+        });
+    }
+
+    componentWillUnmount() {
+        this._unsubscribe();
+    }
+
     render() {
         return (
             <View style={{flex: 1}}>
@@ -196,7 +217,7 @@ export default class C2c extends Component {
                     this.state.navIndex === 1 && <Sell/>
                 }
                 {
-                    this.state.navIndex === 2 && <Publish/>
+                    this.state.navIndex === 2 && <Publish navigation={this.props.navigation}/>
                 }
             </View>
         );

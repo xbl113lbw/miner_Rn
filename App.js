@@ -1,9 +1,10 @@
 // In App.js in a new project
 
 import * as React from 'react';
-import {View, Text, Image, TouchableOpacity, Alert} from 'react-native';
+import {Text, Image, TouchableOpacity, Alert} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
+import {navigationRef} from './RootNavigation';
 
 import Tabbar from './components/tabbar';
 import LoginCom from './views/login/login';
@@ -26,8 +27,39 @@ import DealLoginPwd from './views/dealLoginPwd/dealLoginPwd';
 import AccountRecord from './views/accountRecord/accountRecord';
 import NoticeList from './views/noticeList/noticeList';
 import NoticeInfo from './views/noticeInfo/noticeInfo';
+import MyC2c from './views/myC2c/myC2c';
+import Order from './views/order/order';
+import OrderSuccess from './views/orderSuccess/orderSuccess';
+import PayType from './views/payType/payType';
+import Chat from './views/chat/chat';
+
+import Ajax from './fetch';
+import AsyncStorage from '@react-native-community/async-storage';
 
 const Stack = createStackNavigator();
+
+// 全局属性
+global.Ajax = Ajax;
+global.AsyncStorage = AsyncStorage;
+global.baseUrl = 'http://api.miner.chainck.com/index.php?s=/';
+/* 时间格式化 */
+global.formatDate = (time, type = 1) => {
+    let date = new Date(time * 1000);
+    let object = {
+        'y+': date.getFullYear(),
+        'M+': date.getMonth() + 1,
+        'd+': date.getDate() < 10 ? `0${date.getDate()}` : date.getDate(),
+        'H+': date.getHours() < 10 ? `0${date.getHours()}` : date.getHours(),
+        'm+': date.getMinutes() < 10 ? `0${date.getMinutes()}` : date.getMinutes(),
+        's+': date.getSeconds() < 10 ? `0${date.getSeconds()}` : date.getSeconds(),
+    };
+    switch (type) {
+        case 1:
+            return `${object['y+']}-${object['M+']}-${object['d+']}`;
+        case 2:
+            return `${object['y+']}-${object['M+']}-${object['d+']} ${object['H+']}:${object['m+']}:${object['s+']}`;
+    }
+};
 
 function getHeaderTitle({navigation, route}) {
     const routeName = route.state ? route.state.routes[route.state.index].name : route.params?.screen || '首页';
@@ -40,11 +72,6 @@ function getHeaderTitle({navigation, route}) {
         case '团队':
             return {
                 title: '团队',
-                headerRight: () => (
-                    <View style={{paddingRight: 20}}>
-                        <Image style={{height: 3, width: 15}} source={require('./img/omit.png')}/>
-                    </View>
-                ),
             };
         case '交易':
             return {
@@ -62,9 +89,11 @@ function getHeaderTitle({navigation, route}) {
             return {
                 title: 'C2C交易',
                 headerRight: () => (
-                    <View style={{paddingRight: 20}}>
+                    <TouchableOpacity style={{paddingRight: 20}} onPress={() => {
+                        navigation.navigate('MyC2c');
+                    }}>
                         <Image style={{height: 16, width: 14}} source={require('./img/c2c/c2c_right.png')}/>
-                    </View>
+                    </TouchableOpacity>
                 ),
             };
         case '个人':
@@ -77,8 +106,11 @@ function getHeaderTitle({navigation, route}) {
 
 function App() {
     return (
-        <NavigationContainer>
-            <Stack.Navigator initialRouteName="Login">
+        <NavigationContainer ref={navigationRef}>
+            <Stack.Navigator initialRouteName="Tab">
+                {/*Tab页*/}
+                <Stack.Screen name="Tab" component={Tabbar}
+                              options={(navigation, route) => getHeaderTitle(navigation, route)}/>
                 {/*登录*/}
                 <Stack.Screen name="Login" component={LoginCom}
                               options={{
@@ -122,17 +154,17 @@ function App() {
                               }}/>
                 {/*充币*/}
                 <Stack.Screen name="Recharge" component={Recharge}
-                              options={{
+                              options={(navigation) => ({
                                   title: '充币',
                                   headerRight: () => (
                                       <TouchableOpacity style={{paddingRight: 20}}
                                                         onPress={() => {
-                                                            navigation.navigation.navigate('ShareLists');
+                                                            navigation.navigation.navigate('AccountRecord');
                                                         }}>
                                           <Text style={{fontSize: 14, color: '#000000'}}>充值记录</Text>
                                       </TouchableOpacity>
                                   ),
-                              }}/>
+                              })}/>
                 {/*提币*/}
                 <Stack.Screen name="Withdraw" component={Withdraw}
                               options={{
@@ -146,25 +178,8 @@ function App() {
                 {/*我的矿机*/}
                 <Stack.Screen name="MyMiner" component={MyMiner}
                               options={{
-                                  title: '我的矿机',
-                                  headerRight: () => (
-                                      <TouchableOpacity style={{paddingRight: 20}}
-                                                        onPress={() => {
-                                                            Alert.alert(
-                                                                '领取',
-                                                                '矿机已产币： 1000',
-                                                                [
-                                                                    {
-                                                                        text: '一键领取',
-                                                                        onPress: () => console.log('一键领取'),
-                                                                        style: 'cancel',
-                                                                    },
-                                                                ],
-                                                            );
-                                                        }}>
-                                          <Text style={{fontSize: 14, color: '#000000'}}>一键领取</Text>
-                                      </TouchableOpacity>
-                                  ),
+                                  headerShown: false,
+                                  headerMode: 'none',
                               }}/>
                 {/*拼团*/}
                 <Stack.Screen name="Group" component={Group}
@@ -216,9 +231,31 @@ function App() {
                               options={{
                                   title: '通知公告',
                               }}/>
-                {/*Tab页*/}
-                <Stack.Screen name="Tab" component={Tabbar}
-                              options={(navigation, route) => getHeaderTitle(navigation, route)}/>
+                {/*我的C2C*/}
+                <Stack.Screen name="MyC2c" component={MyC2c}
+                              options={{
+                                  title: 'C2C',
+                              }}/>
+                {/*购买订单*/}
+                <Stack.Screen name="Order" component={Order}
+                              options={{
+                                  title: '购买订单',
+                              }}/>
+                {/*已完成*/}
+                <Stack.Screen name="OrderSuccess" component={OrderSuccess}
+                              options={{
+                                  title: '已完成',
+                              }}/>
+                {/*支付方式*/}
+                <Stack.Screen name="PayType" component={PayType}
+                              options={{
+                                  title: '支付方式',
+                              }}/>
+                {/*聊天页*/}
+                <Stack.Screen name="Chat" component={Chat}
+                              options={{
+                                  title: '聊天',
+                              }}/>
             </Stack.Navigator>
         </NavigationContainer>
     );
